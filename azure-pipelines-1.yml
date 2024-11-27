@@ -13,8 +13,6 @@ stages:
     jobs:
       - job: DockerBuild
         displayName: Build Docker Image
-        pool:
-          vmImage: $(vmImage)  # Reference the vmImage variable here
         steps:
           - task: Docker@2
             inputs:
@@ -23,32 +21,17 @@ stages:
               command: 'build'
               Dockerfile: '**/Dockerfile'
               tags: $(Build.BuildId)
-
-  - stage: TrivyScan
-    displayName: Trivy Docker Image Scan
+  - stage: PushToACR
+    displayName: Pushing To ACR
     jobs:
-      - job: TrivyScan
-        displayName: Trivy Docker Image Scan
-        pool:
-          vmImage: $(vmImage)
+      - job: PushToACR
+        displayName: Pushing To ACR
         steps:
-          # Cache the Trivy vulnerability database manually
-          - task: Cache@2
-            inputs:
-              key: 'trivy-db-cache-$(Agent.OS)-$(Build.SourceBranchName)'
-              restoreKeys: |
-                trivy-db-cache-
-              path: $(Pipeline.Workspace)/.cache/trivy
-
-          # Install Trivy
-          - script: |
-              echo "Installing Trivy..."
-              curl -sfL https://github.com/aquasecurity/trivy/releases/download/v0.29.0/trivy_0.29.0_Linux-64bit.deb -o trivy.deb
-              sudo dpkg -i trivy.deb
-            displayName: 'Install Trivy'
-
-          # Trivy scan with the custom cached vulnerability DB
-          - script: |
-              echo "Running Trivy scan on the Docker image"
-              trivy --cache-dir $(Pipeline.Workspace)/.cache/trivy image --format table -o trivy-image-report.html demoacr839/voting:$(Build.BuildId)
-            displayName: 'Trivy Image Scan'
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'ado_sc'
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az acr login -n demoacr839
+              docker push demoacr839/voting-app:$(tags)
