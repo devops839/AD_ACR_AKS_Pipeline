@@ -18,8 +18,6 @@ stages:
   jobs:
   - job: Build
     displayName: Build
-    pool:
-      vmImage: $(vmImageName)
     steps:
     - task: Docker@2
       displayName: Build and push an image to container registry
@@ -31,35 +29,23 @@ stages:
         tags: |
           $(tag)
 
-- stage: Deploy
-  displayName: Deploy stage
-  dependsOn: Build
+- stage: DeployToAKS
+  displayName: Deploy to AKS
   jobs:
-  - deployment: Deploy
-    displayName: Deploy
-    pool:
-      vmImage: $(vmImageName)
-    environment: 'AKSACRPOC-2455.default'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          # Debug step to list all files in the source directory
-          - script: |
-              echo "Listing the entire source directory"
-              ls -la $(Build.SourcesDirectory)
-            displayName: 'List the root of the source directory'
+    - job: DeployToAKS
+      displayName: Deploy to AKS
+      steps:
+      - task: Kubernetes@1
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscriptionEndpoint: 'ado_sc'
+          azureResourceGroup: 'demo-aks-rg'
+          kubernetesCluster: 'demo-aks'
+          namespace: 'default'
+          command: 'apply'
+          useConfigurationFile: true
+          configuration: 'k8s'
+          secretType: 'dockerRegistry'
+          containerRegistryType: 'Azure Container Registry'
 
-          # Debug step to list files in k8s directory
-          - script: |
-              echo "Listing files in $(Build.SourcesDirectory)/k8s"
-              ls -la $(Build.SourcesDirectory)/k8s
-            displayName: 'List files in k8s directory'
 
-          # Deploy to Kubernetes cluster
-          - task: KubernetesManifest@0
-            displayName: Deploy to Kubernetes cluster
-            inputs:
-              action: 'deploy'
-              manifests: '$(Build.SourcesDirectory)/k8s/*.yaml'  # Ensure this path is correct
-              containers: '$(containerRegistry)/$(imageRepository):$(tag)'
