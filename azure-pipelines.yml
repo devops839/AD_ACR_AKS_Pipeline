@@ -2,45 +2,49 @@ trigger:
   - main
 
 pool:
-  vmImage: ubuntu-latest  # Set the image to be used for the build
+  vmImage: ubuntu-latest
 
 variables:
-  acrName: demoacr839
   tag: $(Build.BuildId)
-
+  acrName: demoacr839
+  aksResourceGroup: demo-aks-rg
+  aksCluster: demo-aks
+  namespace: default
 
 stages:
   - stage: BuildPushImage
-    displayName: Build&Push Docker Image
+    displayName: Build & Push Docker Image
     jobs:
       - job: Build_Image
-        displayName: Build&Push Docker Image
+        displayName: Build & Push Docker Image
         steps:
         - task: AzureCLI@2
           inputs:
-            azureSubscription: 'ado_sc'
+            azureSubscription: 'ado_sc'  # Azure service connection
             scriptType: 'bash'
             scriptLocation: 'inlineScript'
             inlineScript: |
-              docker build -t demoacr839.azurecr.io/app:$(tag) .
-              az acr login -n demoacr839
-              docker push demoacr839.azurecr.io/app:$(tag)
+              docker build -t $(acrName).azurecr.io/app:$(tag) .
+              az acr login -n $(acrName)
+              docker push $(acrName).azurecr.io/app:$(tag)
 
   - stage: DeployToAKS
-    displayName: Deploying To AKS
+    displayName: Deploy to AKS
     jobs:
       - job: DeployToAKS
-        displayName: Deploying To AKS
+        displayName: Deploying to AKS
         steps:
         - task: Kubernetes@1
           inputs:
             connectionType: 'Azure Resource Manager'
             azureSubscriptionEndpoint: 'ado_sc'
-            azureResourceGroup: 'demo-aks-rg'
-            kubernetesCluster: 'demo-aks'
-            namespace: 'default'
+            azureResourceGroup: $(aksResourceGroup)
+            kubernetesCluster: $(aksCluster)
+            namespace: $(namespace)
             command: 'apply'
             useConfigurationFile: true
-            configuration: 'k8s'
-            arguments: '-f k8s/vote_deploy.yaml --set image.tag=$(Build.BuildId) --set acrName=demoacr839'
-            containerRegistryType: 'Azure Container Registry'
+            configuration: 'k8s/vote_deploy.yaml'
+            arguments: |
+              -f k8s/vote_deploy.yaml
+              --set image.tag=$(tag)
+              --set acrName=$(acrName)
