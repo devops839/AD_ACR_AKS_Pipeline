@@ -1,7 +1,9 @@
 trigger:
   - main
+
 pool:
   vmImage: ubuntu-latest  # Set the image to be used for the build
+
 variables:
   tags: $(Build.BuildId)  # Define the 'tags' variable using Build ID
 
@@ -20,6 +22,9 @@ stages:
               Dockerfile: '**/Dockerfile'
               tags: $(tags)
 
+          # Add a check to see the built image locally
+          - script: docker images
+            displayName: 'Check Docker Images'
 
   - stage: PushToACR
     displayName: Pushing To ACR
@@ -28,11 +33,11 @@ stages:
       - job: PushToACR
         displayName: Pushing To ACR
         steps:
-        - task: AzureCLI@2
-          inputs:
-            azureSubscription: 'ado_sc'
-            scriptType: 'bash'
-            scriptLocation: 'inlineScript'
-            inlineScript: |
-              az acr login -n demoacr839
-              docker push demoacr839/voting-app:$(tags)
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'ado_sc'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az acr login -n demoacr839
+                docker push demoacr839/voting-app:$(tags)
