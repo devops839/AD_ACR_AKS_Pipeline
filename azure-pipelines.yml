@@ -1,51 +1,37 @@
 trigger:
   - main
-
-resources:
-  - repo: self
-
+pool:
+  vmImage: ubuntu-latest  # Set the image to be used for the build
 variables:
-  dockerRegistryServiceConnection: '95da310b-88e3-41b4-a81b-ed957458b4ec'
-  imageRepository: 'aksacrpoc'
-  containerRegistry: 'demoacr839.azurecr.io'
-  dockerfilePath: '**/Dockerfile'
-  tag: '$(Build.BuildId)'
-  vmImageName: 'ubuntu-latest'
+  tags: $(Build.BuildId)  # Define the 'tags' variable using Build ID
 
 stages:
-- stage: Build
-  displayName: Build stage
-  jobs:
-  - job: Build
-    displayName: Build
-    steps:
-    - task: Docker@2
-      displayName: Build and push an image to container registry
-      inputs:
-        command: buildAndPush
-        repository: $(imageRepository)
-        dockerfile: $(dockerfilePath)
-        containerRegistry: $(dockerRegistryServiceConnection)
-        tags: |
-          $(tag)
+  - stage: DockerBuild
+    displayName: Build stage
+    jobs:
+      - job: DockerBuild
+        displayName: Build Docker Image
+        steps:
+          - task: Docker@2
+            inputs:
+              containerRegistry: 'demoacr839'
+              repository: 'voting-app'
+              command: 'build'
+              Dockerfile: '**/Dockerfile'
+              tags: 'demoacr839.azurecr.io/app$(tags)'
 
-- stage: DeployToAKS
-  displayName: Deploy to AKS
-  jobs:
-    - job: DeployToAKS
-      displayName: Deploy to AKS
-      steps:
-      - task: Kubernetes@1
-        inputs:
-          connectionType: 'Azure Resource Manager'
-          azureSubscriptionEndpoint: 'ado_sc'
-          azureResourceGroup: 'demo-aks-rg'
-          kubernetesCluster: 'demo-aks'
-          namespace: 'default'
-          command: 'apply'
-          useConfigurationFile: true
-          configuration: 'k8s'
-          secretType: 'dockerRegistry'
-          containerRegistryType: 'Azure Container Registry'
-
-
+  - stage: PushToACR
+    displayName: Pushing To ACR
+    dependsOn: DockerBuild  # Ensure the PushToACR stage depends on DockerBuild stage
+    jobs:
+      - job: PushToACR
+        displayName: Pushing To ACR
+        steps:
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'ado_sc'
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az acr login -n demoacr839
+              docker push demoacr839/voting-app:$(tags)
