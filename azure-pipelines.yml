@@ -34,16 +34,12 @@ stages:
       - job: DeployToAKS
         displayName: Deploying to AKS
         steps:
-        - task: Kubernetes@1
+        - task: AzureCLI@2
           inputs:
-            connectionType: 'Azure Resource Manager'
-            azureSubscriptionEndpoint: 'ado_sc'
-            azureResourceGroup: '$(aksResourceGroup)'
-            kubernetesCluster: '$(aksCluster)'
-            namespace: '$(namespace)'
-            command: 'apply'
-            arguments: |
+            azureSubscription: 'ado_sc'
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
               sed 's/\${acrName}/$(acrName)/g' k8s/vote_deploy.yaml > k8s/vote_deploy_substituted.yaml
               sed 's/\${tag}/$(tag)/g' k8s/vote_deploy_substituted.yaml > k8s/vote_deploy_new_build.yaml
               kubectl apply -f k8s/vote_deploy_new_build.yaml
-            containerRegistryType: 'Azure Container Registry'
