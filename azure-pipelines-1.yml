@@ -37,7 +37,7 @@ stages:
             scriptLocation: 'inlineScript'
             inlineScript: |
               az acr login -n demoacr839
-              docker push demoacr839/voting-app:$(tags)
+              docker push demoacr839.azurecr.io/voting-app:$(tags)
 
   - stage: DeployToAKS
     displayName: Deploy to AKS
