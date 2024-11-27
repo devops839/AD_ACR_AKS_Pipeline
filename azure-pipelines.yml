@@ -19,8 +19,11 @@ stages:
             targetType: 'inline'
             script: |
               echo "Building Docker image with tag $(tags)"
-              docker build -t demoacr839/voting-app:$(tags) .
-              docker tag demoacr839/voting-app:$(tags) demoacr839/voting-app:latest  # Optional: Tag as latest as well
+              # Build the Docker image and tag it with the build ID and 'latest'
+              docker build -t demoacr839.azurecr.io/voting-app:$(tags) .
+              docker tag demoacr839.azurecr.io/voting-app:$(tags) demoacr839.azurecr.io/voting-app:latest  # Tag as 'latest' as well
+              # List Docker images to confirm successful build
+              docker images
 
   - stage: PushToACR
     displayName: Push Docker Image to ACR
@@ -35,7 +38,13 @@ stages:
               scriptType: 'bash'                 # Use bash scripting
               scriptLocation: 'inlineScript'     # Inline script
               inlineScript: |
+                # Login to Azure Container Registry (ACR)
                 az acr login -n demoacr839
+                
+                # Check if the image exists locally
+                echo "Listing all local Docker images"
                 docker images
-                docker push demoacr839/voting-app:$(tags)
-                docker push demoacr839/voting-app:latest
+                
+                # Ensure the image is tagged correctly before pushing
+                docker push demoacr839.azurecr.io/voting-app:$(tags)   # Push with the build ID tag
+                docker push demoacr839.azurecr.io/voting-app:latest    # Push with the 'latest' tag
