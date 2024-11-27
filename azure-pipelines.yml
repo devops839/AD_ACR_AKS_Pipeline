@@ -42,5 +42,8 @@ stages:
             kubernetesCluster: '$(aksCluster)'
             namespace: '$(namespace)'
             command: 'apply'
-            arguments: 'envsubst < k8s/vote_deploy.yaml | kubectl apply -f -'
+            arguments: |
+              sed 's/\${acrName}/$(acrName)/g' k8s/vote_deploy.yaml > k8s/vote_deploy_substituted.yaml
+              sed 's/\${tag}/$(tag)/g' k8s/vote_deploy_substituted.yaml > k8s/vote_deploy_new_build.yaml
+              kubectl apply -f k8s/vote_deploy_new_build.yaml
             containerRegistryType: 'Azure Container Registry'
