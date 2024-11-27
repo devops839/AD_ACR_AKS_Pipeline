@@ -41,7 +41,6 @@ stages:
             scriptLocation: 'inlineScript'
             inlineScript: |
               az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksCluster)
-              kubectl cluster-info
               sed 's/\${acrName}/$(acrName)/g' k8s/vote_deploy.yaml > k8s/vote_deploy_substituted.yaml
               sed 's/\${tag}/$(tag)/g' k8s/vote_deploy_substituted.yaml > k8s/vote_deploy_new_build.yaml
               kubectl apply -f k8s/vote_deploy_new_build.yaml --validate=false
