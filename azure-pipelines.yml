@@ -14,13 +14,18 @@ stages:
       - job: DockerBuild
         displayName: Build Docker Image
         steps:
+          # Debugging step to print the value of the tags variable
+          - script: echo "Tag being used:demoacr839/voting-app:$(tags)"
+            displayName: 'Print Tag Value'
+          
           - task: Docker@2
             inputs:
               containerRegistry: 'acr_sc'
-              repository: 'app'
+              repository: 'voting-app'
               command: 'build'
               Dockerfile: '**/Dockerfile'
-              tags: 'demoacr839/voting-app:$(tags)'  # Ensure the image is tagged correctly
+              tags: 'demoacr839/voting-app:$(tags)'  # Use valid image tag format
+
           # Add a check to see the built image locally
           - script: docker images
             displayName: 'Check Docker Images'
