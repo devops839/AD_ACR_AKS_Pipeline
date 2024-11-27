@@ -18,7 +18,7 @@ stages:
               repository: 'app'
               command: 'build'
               Dockerfile: '**/Dockerfile'
-              tags: 'demoacr839.azurecr.io/app$(tags)'
+              tags: $(tags)
 
 
   - stage: PushToACR
