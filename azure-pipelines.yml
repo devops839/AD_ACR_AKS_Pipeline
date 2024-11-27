@@ -9,4 +9,54 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
+stages:
+  - stage: InstallJava
+    displayName: 'Install Java 17'
+    jobs:
+      - job: InstallJavaJob
+        steps:
+          - task: JavaToolInstaller@1
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+  - stage: BuildAndTest
+    displayName: 'Build and Package with Maven, Run SonarQube Analysis'
+    dependsOn: InstallJava
+    jobs:
+      - job: BuildAndTestJob
+        steps:
+          - task: Maven@4
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean package sonar:sonar'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+              javaHomeOption: 'JDKVersion'
+              mavenVersionOption: 'Default'
+              mavenAuthenticateFeed: false
+              effectivePomSkip: false
+              sonarQubeRunAnalysis: true
+              sqMavenPluginVersionChoice: 'latest'
+
+  - stage: DockerBuildAndPush
+    displayName: 'Docker Build and Push'
+    dependsOn: BuildAndTest
+    jobs:
+      - job: DockerBuildAndPushJob
+        steps:
+          - task: Docker@2
+            inputs:
+              containerRegistry: 'dockerhub_sc'
+              repository: 'pavan539/voting-app-java'
+              command: 'build'
+              Dockerfile: '**/Dockerfile'
+              tags: 'latest'
+
+          - task: Docker@2
+            inputs:
+              containerRegistry: 'dockerhub_sc'
+              repository: 'pavan539/voting-app-java'
+              command: 'push'
+              tags: 'latest'
