@@ -18,7 +18,7 @@ stages:
           - task: Docker@2
             inputs:
               containerRegistry: 'demoacr839'
-              repository: 'demoacr839/voting'
+              repository: 'voting-app'
               command: 'build'
               Dockerfile: '**/Dockerfile'
               tags: $(tags)  # Use the 'tags' variable
