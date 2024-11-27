@@ -4,28 +4,27 @@ trigger:
 pool:
   vmImage: ubuntu-latest  # Set the image to be used for the build
 
+variables:
+  tags: $(Build.BuildId)  # Tag with build ID
+
 stages:
-  - stage: DockerBuild
+  - stage: Build_Image
     displayName: Build Docker Image
     jobs:
-      - job: DockerBuild
+      - job: Build_Image
         displayName: Build Docker Image
         steps:
-          - task: Docker@2
-            inputs:
-              containerRegistry: 'acr_sc'  # Azure Container Registry Service Connection
-              repository: 'voting-app'     # Docker repository name
-              command: 'build'             # Command to build the Docker image
-              Dockerfile: '**/Dockerfile'  # Path to the Dockerfile
-              tags: 'latest'               # Docker image tag (you can also use variables here)
-
-          # Add a check to see the built image locally
-          - script: docker images
-            displayName: 'Check Docker Images'
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              echo "Building Docker image with tag $(tags)"
+              docker build -t demoacr839/voting-app:$(tags) .
+              docker tag demoacr839/voting-app:$(tags) demoacr839/voting-app:latest  # Optional: Tag as latest as well
 
   - stage: PushToACR
     displayName: Push Docker Image to ACR
-    dependsOn: DockerBuild  # Ensure the PushToACR stage runs after DockerBuild
+    dependsOn: Build_Image  # Ensure the PushToACR stage runs after Docker build
     jobs:
       - job: PushToACR
         displayName: Push Docker Image to ACR
@@ -36,13 +35,7 @@ stages:
               scriptType: 'bash'                 # Use bash scripting
               scriptLocation: 'inlineScript'     # Inline script
               inlineScript: |
-                # Login to Azure Container Registry (ACR)
                 az acr login -n demoacr839
-                
-                # Check if the image exists locally
-                echo "Listing all local images"
                 docker images
-
-                # If the image exists, tag it and push it to ACR
-                docker tag voting-app:latest demoacr839/voting-app:latest
+                docker push demoacr839/voting-app:$(tags)
                 docker push demoacr839/voting-app:latest
