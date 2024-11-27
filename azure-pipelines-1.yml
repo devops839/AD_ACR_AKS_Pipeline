@@ -16,8 +16,8 @@ stages:
         steps:
           - task: Docker@2
             inputs:
-              containerRegistry: 'demoacr839'  # ACR service connection
-              repository: 'voting-app'  # Repository name in ACR
+              containerRegistry: 'acr_sc'
+              repository: 'voting-app'
               command: 'build'
               Dockerfile: '**/Dockerfile'
               tags: 'demoacr839.azurecr.io/voting-app:$(tags)'
