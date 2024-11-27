@@ -1,0 +1,25 @@
+trigger:
+  - main
+
+pool:
+  vmImage: ubuntu-latest  # Set the image to be used for the build
+
+variables:
+  vmImage: ubuntu-latest  # Define the image variable if needed
+
+stages:
+  - stage: DockerBuild
+    displayName: Build stage
+    jobs:
+      - job: DockerBuild
+        displayName: Build Docker Image
+        pool:
+          vmImage: $(vmImage)  # Reference the vmImage variable here
+        steps:
+          - task: Docker@2
+            inputs:
+              containerRegistry: 'demoacr839'
+              repository: 'demoacr839/voting'
+              command: 'build'
+              Dockerfile: '**/Dockerfile'
+              tags: $(Build.BuildId)
