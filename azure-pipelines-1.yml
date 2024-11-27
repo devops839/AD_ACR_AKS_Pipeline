@@ -20,7 +20,7 @@ stages:
               repository: 'voting-app'  # Repository name in ACR
               command: 'build'
               Dockerfile: '**/Dockerfile'
-              tags: 'demoacr839.azurecr.io/voting-app:$(tags)'  # Correct format: registry/repository:tag
+              tags: 'demoacr839.azurecr.io/voting-app:$(tags)'
 
   - stage: PushToACR
     displayName: Push Docker Image to ACR
