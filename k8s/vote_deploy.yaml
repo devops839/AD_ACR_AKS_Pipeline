@@ -18,7 +18,7 @@ spec:
         - name: acr-secret  # Reference to the Kubernetes secret for ACR authentication
       containers:
         - name: voting-app-container
-          image: demoacr839.azurecr.io/app:$(Build.BuildId)  # Image from ACR with build tag
+          image: $(acrName).azurecr.io/app:$(Build.BuildId)  # Image reference with the build ID from the pipeline
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
