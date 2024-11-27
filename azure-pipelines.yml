@@ -30,15 +30,14 @@ stages:
           - task: Maven@4
             inputs:
               mavenPomFile: 'pom.xml'
-              goals: 'clean package sonar:sonar'
+              goals: 'clean package'
               publishJUnitResults: true
               testResultsFiles: '**/surefire-reports/TEST-*.xml'
               javaHomeOption: 'JDKVersion'
               mavenVersionOption: 'Default'
               mavenAuthenticateFeed: false
               effectivePomSkip: false
-              sonarQubeRunAnalysis: true
-              sqMavenPluginVersionChoice: 'latest'
+              sonarQubeRunAnalysis: false
 
   - stage: DockerBuildAndPush
     displayName: 'Docker Build and Push'
@@ -50,13 +49,6 @@ stages:
             inputs:
               containerRegistry: 'dockerhub_sc'
               repository: 'pavan539/voting-app-java'
-              command: 'build'
+              command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
-              tags: 'latest'
-
-          - task: Docker@2
-            inputs:
-              containerRegistry: 'dockerhub_sc'
-              repository: 'pavan539/voting-app-java'
-              command: 'push'
               tags: 'latest'
