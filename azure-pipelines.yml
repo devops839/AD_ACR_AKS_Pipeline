@@ -24,11 +24,11 @@ stages:
             displayName: 'Check Docker Images'
 
   - stage: PushToACR
-    displayName: Pushing To ACR
-    dependsOn: DockerBuild  # Ensure the PushToACR stage depends on DockerBuild stage
+    displayName: Push Docker Image to ACR
+    dependsOn: DockerBuild  # Ensure the PushToACR stage runs after DockerBuild
     jobs:
       - job: PushToACR
-        displayName: Pushing To ACR
+        displayName: Push Docker Image to ACR
         steps:
           - task: AzureCLI@2
             inputs:
@@ -37,4 +37,5 @@ stages:
               scriptLocation: 'inlineScript'
               inlineScript: |
                 az acr login -n demoacr839
-                docker push demoacr839/voting-app:$(Build.BuildId)
+                docker tag voting-app:latest demoacr839/voting-app:latest
+                docker push demoacr839/voting-app:latest
