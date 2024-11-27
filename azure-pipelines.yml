@@ -40,10 +40,7 @@ stages:
             scriptType: 'bash'
             scriptLocation: 'inlineScript'
             inlineScript: |
-              # Replace the placeholder acrName and tag in the YAML file using sed
+              az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksCluster)
               sed 's/\${acrName}/$(acrName)/g' k8s/vote_deploy.yaml > k8s/vote_deploy_substituted.yaml
               sed 's/\${tag}/$(tag)/g' k8s/vote_deploy_substituted.yaml > k8s/vote_deploy_new_build.yaml
-
-              # Apply the substituted YAML file to the AKS cluster with validation turned off
               kubectl apply -f k8s/vote_deploy_new_build.yaml --validate=false
-            displayName: 'Replace placeholders and deploy to AKS'
