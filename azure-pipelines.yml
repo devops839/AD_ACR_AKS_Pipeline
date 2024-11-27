@@ -5,7 +5,7 @@ pool:
   vmImage: ubuntu-latest  # Set the image to be used for the build
 
 variables:
-  tags: $(Build.BuildId)  # Tag with build ID
+  tag: $(Build.BuildId)  # Tag with build ID
 
 stages:
   - stage: Build_Image
@@ -14,46 +14,12 @@ stages:
       - job: Build_Image
         displayName: Build Docker Image
         steps:
-        - task: Bash@3
+        - task: AzureCLI@2
           inputs:
-            targetType: 'inline'
-            script: |
-              echo "Building Docker image with tag $(tags)"
-              # Build the Docker image and tag it with the build ID
-              docker build -t demoacr839.azurecr.io/voting-app:$(tags) .
-              docker tag demoacr839.azurecr.io/voting-app:$(tags) demoacr839.azurecr.io/voting-app:latest  # Tag as 'latest' as well
-              # List Docker images to confirm successful build
-              docker images
-
-  - stage: PushToACR
-    displayName: Push Docker Image to ACR
-    dependsOn: Build_Image  # Ensure the PushToACR stage runs after Docker build
-    jobs:
-      - job: PushToACR
-        displayName: Push Docker Image to ACR
-        steps:
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: 'ado_sc'        # Azure subscription service connection
-              scriptType: 'bash'                 # Use bash scripting
-              scriptLocation: 'inlineScript'     # Inline script
-              inlineScript: |
-                # Login to Azure Container Registry (ACR)
-                az acr login -n demoacr839
-                
-                # Check if the image exists locally (for debug purposes)
-                echo "Listing all local Docker images"
-                docker images
-                
-                # Ensure both the $(tags) and latest tags are available
-                docker tag demoacr839.azurecr.io/voting-app:$(tags) demoacr839.azurecr.io/voting-app:latest
-                
-                # Double-check that both tags exist
-                echo "Confirming image tags"
-                docker images | grep demoacr839.azurecr.io/voting-app
-                
-                # Push both $(tags) and latest to ACR
-                docker push demoacr839.azurecr.io/voting-app:$(tags)
-                docker push demoacr839.azurecr.io/voting-app:latest
-
-                echo "Image successfully pushed to ACR."
+            azureSubscription: 'ado_sc'
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              docker build -t demoacr839.azurecr.io/app:$(tag) .
+              az acr login -n demoacr839
+              docker push demoacr839.azurecr.io/app:$(tag)
