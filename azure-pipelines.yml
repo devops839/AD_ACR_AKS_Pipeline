@@ -6,19 +6,19 @@ pool:
 
 stages:
   - stage: DockerBuild
-    displayName: Build stage
+    displayName: Build Docker Image
     jobs:
       - job: DockerBuild
         displayName: Build Docker Image
         steps:
           - task: Docker@2
             inputs:
-              containerRegistry: 'acr_sc'
-              repository: 'voting-app'
-              command: 'build'
-              Dockerfile: '**/Dockerfile'
-              tags: 'latest'  # Use valid image tag format
-              
+              containerRegistry: 'acr_sc'  # Azure Container Registry Service Connection
+              repository: 'voting-app'     # Docker repository name
+              command: 'build'             # Command to build the Docker image
+              Dockerfile: '**/Dockerfile'  # Path to the Dockerfile
+              tags: 'latest'               # Docker image tag (you can also use variables here)
+
           # Add a check to see the built image locally
           - script: docker images
             displayName: 'Check Docker Images'
@@ -32,10 +32,17 @@ stages:
         steps:
           - task: AzureCLI@2
             inputs:
-              azureSubscription: 'ado_sc'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
+              azureSubscription: 'ado_sc'        # Azure subscription service connection
+              scriptType: 'bash'                 # Use bash scripting
+              scriptLocation: 'inlineScript'     # Inline script
               inlineScript: |
+                # Login to Azure Container Registry (ACR)
                 az acr login -n demoacr839
+                
+                # Check if the image exists locally
+                echo "Listing all local images"
+                docker images
+
+                # If the image exists, tag it and push it to ACR
                 docker tag voting-app:latest demoacr839/voting-app:latest
                 docker push demoacr839/voting-app:latest
