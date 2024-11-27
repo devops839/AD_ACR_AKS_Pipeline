@@ -20,9 +20,11 @@ stages:
             scriptType: 'bash'
             scriptLocation: 'inlineScript'
             inlineScript: |
-              docker build -t demoacr839.azurecr.io/app:$(tag) .
+              # Build and push the Docker image
+              docker build -t demoacr839.azurecr.io/app:$(Build.BuildId) .
               az acr login -n demoacr839
-              docker push demoacr839.azurecr.io/app:$(tag)
+              docker push demoacr839.azurecr.io/app:$(Build.BuildId)
+              sed -i 's#$(Build.BuildId)#'$(Build.BuildId)'#g' k8s/deployment.yaml
 
   - stage: DeployToAKS
     displayName: Deploying To AKS
