@@ -8,11 +8,11 @@ variables:
   tag: $(Build.BuildId)  # Tag with build ID
 
 stages:
-  - stage: Build_Image
-    displayName: Build Docker Image
+  - stage: BuildPushImage
+    displayName: Build&Push Docker Image
     jobs:
       - job: Build_Image
-        displayName: Build Docker Image
+        displayName: Build&Push Docker Image
         steps:
         - task: AzureCLI@2
           inputs:
@@ -23,3 +23,21 @@ stages:
               docker build -t demoacr839.azurecr.io/app:$(tag) .
               az acr login -n demoacr839
               docker push demoacr839.azurecr.io/app:$(tag)
+
+  - stage: DeployToAKS
+    displayName: Deploying To AKS
+    jobs:
+      - job: DeployToAKS
+        displayName: Deploying To AKS
+        steps:
+        - task: Kubernetes@1
+          inputs:
+            connectionType: 'Azure Resource Manager'
+            azureSubscriptionEndpoint: 'ado_sc'
+            azureResourceGroup: 'demo-aks-rg'
+            kubernetesCluster: 'demo-aks'
+            namespace: 'default'
+            command: 'apply'
+            useConfigurationFile: true
+            configuration: 'k8s'
+            containerRegistryType: 'Azure Container Registry'
