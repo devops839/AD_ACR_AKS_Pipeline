@@ -15,10 +15,11 @@ stages:
           - task: Docker@2
             inputs:
               containerRegistry: 'acr_sc'
-              repository: 'voting-app'
+              repository: 'app'
               command: 'build'
               Dockerfile: '**/Dockerfile'
               tags: 'demoacr839.azurecr.io/app$(tags)'
+
 
   - stage: PushToACR
     displayName: Pushing To ACR
