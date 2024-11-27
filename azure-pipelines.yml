@@ -27,13 +27,20 @@ stages:
     jobs:
       - job: BuildAndTestJob
         steps:
+          # Explicitly setting JAVA_HOME to the correct Java 17 installation
+          - script: |
+              echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_17)"
+              echo "JAVA_HOME set to: $(JAVA_HOME)"
+            displayName: 'Set JAVA_HOME for Maven'
+          
           - task: Maven@4
             inputs:
               mavenPomFile: 'pom.xml'
               goals: 'clean package'
               publishJUnitResults: true
               testResultsFiles: '**/surefire-reports/TEST-*.xml'
-              javaHomeOption: 'JDKVersion'
+              javaHomeOption: 'Custom'
+              customJavaHome: '$(JAVA_HOME)'  # Ensure Maven uses Java 17
               mavenVersionOption: 'Default'
               mavenAuthenticateFeed: false
               effectivePomSkip: false
