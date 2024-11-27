@@ -1,22 +1,15 @@
-# Deploy to Azure Kubernetes Service
-# Build and push image to Azure Container Registry; Deploy to Azure Kubernetes Service
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
 trigger:
-- main
+  - main
 
 resources:
-- repo: self
+  - repo: self
 
 variables:
-
-  # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: '95da310b-88e3-41b4-a81b-ed957458b4ec'
   imageRepository: 'aksacrpoc'
   containerRegistry: 'demoacr839.azurecr.io'
   dockerfilePath: '**/Dockerfile'
   tag: '$(Build.BuildId)'
-  # Agent VM image name
   vmImageName: 'ubuntu-latest'
 
 stages:
@@ -37,13 +30,10 @@ stages:
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
-    - upload: manifests
-      artifact: manifests
 
 - stage: Deploy
   displayName: Deploy stage
   dependsOn: Build
-
   jobs:
   - deployment: Deploy
     displayName: Deploy
@@ -54,10 +44,16 @@ stages:
       runOnce:
         deploy:
           steps:
+          # Debug step to list files in k8s directory
+          - script: |
+              echo "Listing files in $(Build.SourcesDirectory)/k8s"
+              ls -la $(Build.SourcesDirectory)/k8s
+            displayName: 'List files in k8s directory'
+
+          # Deploy to Kubernetes cluster
           - task: KubernetesManifest@0
             displayName: Deploy to Kubernetes cluster
             inputs:
               action: 'deploy'
-              manifests: 'k8s/*.yaml'
+              manifests: '$(Build.SourcesDirectory)/k8s/*.yaml'  # Ensure this path is correct
               containers: '$(containerRegistry)/$(imageRepository):$(tag)'
-
