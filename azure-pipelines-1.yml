@@ -9,51 +9,31 @@ variables:
 
 stages:
   - stage: DockerBuild
-    displayName: Build stage
+    displayName: Build Docker Image
     jobs:
       - job: DockerBuild
         displayName: Build Docker Image
         steps:
           - task: Docker@2
             inputs:
-              containerRegistry: 'demoacr839'
-              repository: 'voting-app'
+              containerRegistry: 'demoacr839'  # ACR service connection
+              repository: 'voting-app'  # Repository name in ACR
               command: 'build'
               Dockerfile: '**/Dockerfile'
-              tags: demoacr839.azurecr.io/voting-app:$(tags)  # Use the 'tags' variable
+              tags: demoacr839/voting-app:$(tags)  # Tag the image as demoacr839/voting-app:$(tags)
 
   - stage: PushToACR
-    displayName: Pushing To ACR
+    displayName: Push Docker Image to ACR
     dependsOn: DockerBuild  # Ensure the PushToACR stage depends on DockerBuild stage
     jobs:
       - job: PushToACR
-        displayName: Pushing To ACR
+        displayName: Push Docker Image to ACR
         steps:
         - task: AzureCLI@2
           inputs:
-            azureSubscription: 'ado_sc'
+            azureSubscription: 'ado_sc'  # Azure subscription service connection
             scriptType: 'bash'
             scriptLocation: 'inlineScript'
             inlineScript: |
               az acr login -n demoacr839
               docker push demoacr839.azurecr.io/voting-app:$(tags)
-
-  - stage: DeployToAKS
-    displayName: Deploy to AKS
-    jobs:
-      - job: DeployToAKS
-        displayName: Deploy to AKS
-        steps:
-        - task: Kubernetes@1
-          inputs:
-            connectionType: 'Azure Resource Manager'
-            azureSubscriptionEndpoint: 'ado_sc'
-            azureResourceGroup: 'demo-aks-rg'
-            kubernetesCluster: 'demo-aks'
-            namespace: 'default'
-            command: 'apply'
-            useConfigurationFile: true
-            configuration: 'k8s'
-            secretType: 'dockerRegistry'
-            containerRegistryType: 'Azure Container Registry'
-        
