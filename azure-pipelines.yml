@@ -5,7 +5,9 @@ pool:
   vmImage: ubuntu-latest  # Set the image to be used for the build
 
 variables:
-  tag: $(Build.BuildId)  # Tag with build ID
+  acrName: demoacr839
+  tag: $(Build.BuildId)
+
 
 stages:
   - stage: BuildPushImage
@@ -20,11 +22,9 @@ stages:
             scriptType: 'bash'
             scriptLocation: 'inlineScript'
             inlineScript: |
-              # Build and push the Docker image
-              docker build -t demoacr839.azurecr.io/app:$(Build.BuildId) .
+              docker build -t demoacr839.azurecr.io/app:$(tag) .
               az acr login -n demoacr839
-              docker push demoacr839.azurecr.io/app:$(Build.BuildId)
-              sed -i 's#$(Build.BuildId)#'$(Build.BuildId)'#g' k8s/deployment.yaml
+              docker push demoacr839.azurecr.io/app:$(tag)
 
   - stage: DeployToAKS
     displayName: Deploying To AKS
@@ -42,4 +42,5 @@ stages:
             command: 'apply'
             useConfigurationFile: true
             configuration: 'k8s'
+            arguments: '-f k8s/vote_deploy.yaml --set image.tag=$(Build.BuildId) --set acrName=demoacr839'
             containerRegistryType: 'Azure Container Registry'
