@@ -5,7 +5,6 @@ pool:
   vmImage: ubuntu-latest  # Set the image to be used for the build
 
 variables:
-  vmImage: ubuntu-latest  # Define the image variable if needed
   tags: $(Build.BuildId)  # Define the 'tags' variable using Build ID
 
 stages:
@@ -21,7 +20,7 @@ stages:
               repository: 'voting-app'
               command: 'build'
               Dockerfile: '**/Dockerfile'
-              tags: $(tags)  # Use the 'tags' variable
+              tags: demoacr839.azurecr.io/voting-app:$(tags)  # Use the 'tags' variable
 
   - stage: PushToACR
     displayName: Pushing To ACR
