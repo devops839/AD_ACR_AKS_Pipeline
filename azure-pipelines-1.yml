@@ -20,7 +20,7 @@ stages:
               repository: 'voting-app'  # Repository name in ACR
               command: 'build'
               Dockerfile: '**/Dockerfile'
-              tags: demoacr839.azurecr.io/voting-app:$(tags)  # Correct tag format
+              tags: 'demoacr839.azurecr.io/voting-app:$(tags)'  # Correct format: registry/repository:tag
 
   - stage: PushToACR
     displayName: Push Docker Image to ACR
@@ -35,8 +35,10 @@ stages:
             scriptType: 'bash'
             scriptLocation: 'inlineScript'
             inlineScript: |
+              # Login to Azure Container Registry (ACR)
               az acr login -n demoacr839
-              docker push demoacr839.azurecr.io/voting-app:$(tags)
+              # Push the Docker image to Azure Container Registry with the correct tag
+              docker push demoacr839.azurecr.io/voting-app:$(tags)  # Correct format: registry/repository:tag
   - stage: DeployToAKS
     displayName: Deploy to AKS
     jobs:
