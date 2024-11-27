@@ -5,7 +5,8 @@ pool:
   vmImage: ubuntu-latest  # Set the image to be used for the build
 
 variables:
-  tags: $(Build.BuildId)
+  vmImage: ubuntu-latest  # Define the image variable if needed
+  tags: $(Build.BuildId)  # Define the 'tags' variable using Build ID
 
 stages:
   - stage: DockerBuild
@@ -20,8 +21,8 @@ stages:
               repository: 'demoacr839/voting'
               command: 'build'
               Dockerfile: '**/Dockerfile'
-              tags: $(tags)
-  
+              tags: $(tags)  # Use the 'tags' variable
+
   - stage: PushToACR
     displayName: Pushing To ACR
     dependsOn: DockerBuild  # Ensure the PushToACR stage depends on DockerBuild stage
@@ -35,8 +36,25 @@ stages:
             scriptType: 'bash'
             scriptLocation: 'inlineScript'
             inlineScript: |
-              # Login to Azure Container Registry (ACR)
               az acr login -n demoacr839
-              
-              # Push the built Docker image using the 'tags' variable
               docker push demoacr839/voting-app:$(tags)
+
+  - stage: DeployToAKS
+    displayName: Deploy to AKS
+    jobs:
+      - job: DeployToAKS
+        displayName: Deploy to AKS
+        steps:
+        - task: Kubernetes@1
+          inputs:
+            connectionType: 'Azure Resource Manager'
+            azureSubscriptionEndpoint: 'ado_sc'
+            azureResourceGroup: 'demo-aks-rg'
+            kubernetesCluster: 'demo-aks'
+            namespace: 'default'
+            command: 'apply'
+            useConfigurationFile: true
+            configuration: 'k8s'
+            secretType: 'dockerRegistry'
+            containerRegistryType: 'Azure Container Registry'
+        
