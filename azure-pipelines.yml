@@ -4,9 +4,6 @@ trigger:
 pool:
   vmImage: ubuntu-latest  # Set the image to be used for the build
 
-variables:
-  tags: $(Build.BuildId)  # Define the 'tags' variable using Build ID
-
 stages:
   - stage: DockerBuild
     displayName: Build stage
@@ -14,18 +11,14 @@ stages:
       - job: DockerBuild
         displayName: Build Docker Image
         steps:
-          # Debugging step to print the value of the tags variable
-          - script: echo "Tag being used:demoacr839/voting-app:$(tags)"
-            displayName: 'Print Tag Value'
-          
           - task: Docker@2
             inputs:
               containerRegistry: 'acr_sc'
               repository: 'voting-app'
               command: 'build'
               Dockerfile: '**/Dockerfile'
-              tags: 'demoacr839/voting-app:$(tags)'  # Use valid image tag format
-
+              tags: 'latest'  # Use valid image tag format
+              
           # Add a check to see the built image locally
           - script: docker images
             displayName: 'Check Docker Images'
@@ -44,4 +37,4 @@ stages:
               scriptLocation: 'inlineScript'
               inlineScript: |
                 az acr login -n demoacr839
-                docker push demoacr839/voting-app:$(tags)  # Ensure this matches the build tag
+                docker push demoacr839/voting-app:$(Build.BuildId)
