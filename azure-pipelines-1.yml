@@ -20,9 +20,10 @@ stages:
               repository: 'demoacr839/voting'
               command: 'build'
               Dockerfile: '**/Dockerfile'
-              tags: $(Build.BuildId)
+              tags: $(tags)
   - stage: PushToACR
     displayName: Pushing To ACR
+    dependsOn: DockerBuild  # Ensure the PushToACR stage depends on DockerBuild stage
     jobs:
       - job: PushToACR
         displayName: Pushing To ACR
@@ -33,5 +34,8 @@ stages:
             scriptType: 'bash'
             scriptLocation: 'inlineScript'
             inlineScript: |
+              # Login to Azure Container Registry (ACR)
               az acr login -n demoacr839
+              
+              # Push the built Docker image using the 'tags' variable
               docker push demoacr839/voting-app:$(tags)
