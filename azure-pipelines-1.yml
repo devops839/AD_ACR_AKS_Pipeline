@@ -5,7 +5,7 @@ pool:
   vmImage: ubuntu-latest  # Set the image to be used for the build
 
 variables:
-  vmImage: ubuntu-latest  # Define the image variable if needed
+  tags: $(Build.BuildId)
 
 stages:
   - stage: DockerBuild
@@ -21,6 +21,7 @@ stages:
               command: 'build'
               Dockerfile: '**/Dockerfile'
               tags: $(tags)
+  
   - stage: PushToACR
     displayName: Pushing To ACR
     dependsOn: DockerBuild  # Ensure the PushToACR stage depends on DockerBuild stage
