@@ -74,3 +74,37 @@ Before setting up the pipeline, ensure the following tools and services are conf
 git clone https://github.com/yourusername/voting-app-java.git
 cd voting-app-java
 
+3. Configure Pipeline Variables
+The following variables need to be configured in your Azure DevOps pipeline:
+
+azureServiceConnection: Azure service connection for Azure resources.
+repositoryName: The repository name in GitHub (e.g., pavan539/voting-app-java).
+javaHome: Java home directory path (e.g., /usr/lib/jvm/java-17-openjdk-amd64).
+acrName: The name of your Azure Container Registry.
+aksResourceGroup: The resource group of your AKS cluster.
+aksCluster: The name of your AKS cluster.
+namespace: Kubernetes namespace for deployment.
+buildVersion: The version of the build, typically 1.0.0-<BuildID>.
+4. Configure Azure DevOps Pipeline
+To configure the pipeline in Azure DevOps:
+
+Navigate to Pipelines in Azure DevOps.
+Click New Pipeline.
+Select GitHub as the repository source and authenticate.
+Choose YAML for pipeline definition and copy-paste the contents of the pipeline YAML configuration.
+5. Access and View Reports
+After running the pipeline, you can view the following reports:
+
+Trivy Security Report: Contains results from the file system scan.
+SonarQube Code Quality Report: Contains results from static code analysis.
+OWASP Dependency Check Report: Contains vulnerability information from the dependency check.
+📝 Notes
+The pipeline is designed to ensure secure, quality code before it is deployed to AKS.
+It uses industry-standard tools like Maven, SonarQube, Trivy, OWASP Dependency-Check, and Docker.
+The pipeline integrates Security and Quality Gates as part of a DevSecOps approach.
+📧 Contact
+GitHub Repository: Your GitHub Repo
+LinkedIn: Your LinkedIn Profile
+markdown
+Copy code
+
